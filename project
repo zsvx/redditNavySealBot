@@ -1,8 +1,11 @@
 #made by u/zsvx on reddit. message him or reply to u/NavySeal-Bot's pinned post for suggestions or concerns.
 
 import praw
+import os
+import pdb
 import re
 import random
+from praw.models import Comment
 
 r = praw.Reddit('bot1')
 #subreddit = r.subreddit("copypasta")
@@ -36,21 +39,36 @@ translation = {
     'z': 'Zulu'
 }
 
-msg = []
+if not os.path.isfile("comments_replied.txt"):
+    comments_replied = []
+else:
+    with open("comments_replied.txt", "r") as f:
+       comments_replied = f.read()
+       comments_replied = comments_replied.split("\n")
+       comments_replied = list(filter(None, comments_replied))
 
-for mention in r.inbox.mentions(limit=1):
-    parent = mention.parent_id
-    parbody = r.comment(mention.parent_id.rsplit('_', 1)[1]) #by /u/bboe
-    parentbody = parbody.body
-    for str in parentbody.split():
-        msg.append(' '.join(translation.get(ch, ch) for ch in str.lower()))
-        msg.append(' / ')
+while True:
+    comments_replied = list(filter(None, comments_replied))
+    msg = []
+    for mention in r.inbox.mentions(limit=1):
+        if mention.id not in comments_replied:
+            parent = mention.parent_id
+            parbody = r.comment(mention.parent_id.rsplit('_', 1)[1]) #by /u/bboe
+            parentbody = parbody.body
+            for str in parentbody.split():
+                msg.append(' '.join(translation.get(ch, ch) for ch in str.lower()))
+                msg.append(' / ')
 
-    yeet = ''.join(msg)
-    while ' !' in yeet or ' ?' in yeet or ' ,' in yeet:
-        yeet = yeet.replace(' !', '!')
-        yeet = yeet.replace(' ?', '?')
-        yeet = yeet.replace(' ,', ',')  
-          
-    #mention.reply(yeet[:-2])
-    print(yeet[:-2])
+            yeet = ''.join(msg)
+            while ' !' in yeet or ' ?' in yeet or ' ,' in yeet:
+                yeet = yeet.replace(' !', '!')
+                yeet = yeet.replace(' ?', '?')
+                yeet = yeet.replace(' ,', ',')  
+
+
+            mention.reply(yeet[:-2])
+            print(yeet[:-2])
+            comments_replied.append(mention.id)
+            with open("comments_replied.txt", "w") as f:
+                for comment_id in comments_replied:
+                    f.write(comment_id + "\n")
