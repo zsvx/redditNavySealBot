@@ -1,0 +1,56 @@
+#made by u/zsvx on reddit. message him or reply to u/NavySeal-Bot's pinned post for suggestions or concerns.
+
+import praw
+import re
+import random
+
+r = praw.Reddit('bot1')
+#subreddit = r.subreddit("copypasta")
+
+translation = {
+    'a': 'Alpha',
+    'b': 'Bravo',
+    'c': 'Charlie',
+    'd': 'Delta',
+    'e': 'Echo',
+    'f': 'Foxtrot',
+    'g': 'Golf',
+    'h': 'Hotel',
+    'i': 'India',
+    'j': 'Juliet',
+    'k': 'Kilo',
+    'l': 'Lima',
+    'm': 'Mike',
+    'n': 'November',
+    'o': 'Oscar',
+    'p': 'Papa',
+    'q': 'Quebec',
+    'r': 'Rome',
+    's': 'Sierra',
+    't': 'Tango',
+    'u': 'Uniform',
+    'v': 'Victor',
+    'w': 'Whiskey',
+    'x': 'X-Ray',
+    'y': 'Yankee',
+    'z': 'Zulu'
+}
+
+msg = []
+
+for mention in r.inbox.mentions(limit=1):
+    parent = mention.parent_id
+    parbody = r.comment(mention.parent_id.rsplit('_', 1)[1]) #by /u/bboe
+    parentbody = parbody.body
+    for str in parentbody.split():
+        msg.append(' '.join(translation.get(ch, ch) for ch in str.lower()))
+        msg.append(' / ')
+
+    yeet = ''.join(msg)
+    while ' !' in yeet or ' ?' in yeet or ' ,' in yeet:
+        yeet = yeet.replace(' !', '!')
+        yeet = yeet.replace(' ?', '?')
+        yeet = yeet.replace(' ,', ',')  
+          
+    #mention.reply(yeet[:-2])
+    print(yeet[:-2])
