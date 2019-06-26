@@ -5,6 +5,7 @@ import os
 import pdb
 import re
 import random
+import time
 from praw.models import Comment
 
 r = praw.Reddit('bot1')
@@ -47,28 +48,81 @@ else:
        comments_replied = comments_replied.split("\n")
        comments_replied = list(filter(None, comments_replied))
 
+if not os.path.isfile("posts_replied.txt"):
+    posts_replied = []
+else:
+    with open("posts_replied.txt", "r") as f:
+       posts_replied = f.read()
+       posts_replied = posts_replied.split("\n")
+       posts_replied = list(filter(None, posts_replied))
+
 while True:
-    comments_replied = list(filter(None, comments_replied))
+    iscomment = False
+    ispost = False
     msg = []
     for mention in r.inbox.mentions(limit=1):
-        if mention.id not in comments_replied:
-            parent = mention.parent_id
-            parbody = r.comment(mention.parent_id.rsplit('_', 1)[1]) #by /u/bboe
-            parentbody = parbody.body
-            for str in parentbody.split():
-                msg.append(' '.join(translation.get(ch, ch) for ch in str.lower()))
-                msg.append(' / ')
+        try:
+            if mention.parent_id.startswith('t3') == False:
+                if mention.id not in comments_replied:  #PARENT COMMENT MENTIONS
+                    iscomment = True
+                    parent = mention.parent_id
+                    parbody = r.comment(mention.parent_id.rsplit('_', 1)[1]) #by /u/bboe
+                    parentbody = parbody.body
+                    for str in parentbody.split():
+                        msg.append(' '.join(translation.get(ch, ch) for ch in str.lower()))
+                        msg.append(' / ')
 
-            yeet = ''.join(msg)
-            while ' !' in yeet or ' ?' in yeet or ' ,' in yeet:
-                yeet = yeet.replace(' !', '!')
-                yeet = yeet.replace(' ?', '?')
-                yeet = yeet.replace(' ,', ',')  
+                    yeet = ''.join(msg)
+                    while ' !' in yeet or ' ?' in yeet or ' ,' in yeet:
+                        yeet = yeet.replace(' !', '!')
+                        yeet = yeet.replace(' ?', '?')
+                        yeet = yeet.replace(' ,', ',')  
 
+                    mention.reply(yeet[:-2])
+                    print(yeet[:-2])
 
-            mention.reply(yeet[:-2])
-            print(yeet[:-2])
+                else:
+                    pass
+
+            if mention.parent_id.startswith('t3') == True:
+                if mention.submission.id not in posts_replied and mention.id not in comments_replied:  #POST MENTIONS
+                    ispost = True
+                    sub = mention.submission.title
+                    bod = mention.submission.selftext
+                    for str in sub.split():
+                        msg.append(' '.join(translation.get(ch, ch) for ch in str.lower()))
+                        msg.append(' / ')
+                    msg.append('----- / ')
+                    for str in bod.split():
+                        msg.append(' '.join(translation.get(ch, ch) for ch in str.lower()))
+                        msg.append(' / ')
+                    yeet = ''.join(msg)
+                    while ' !' in yeet or ' ?' in yeet or ' ,' in yeet:
+                        yeet = yeet.replace(' !', '!')
+                        yeet = yeet.replace(' ?', '?')
+                        yeet = yeet.replace(' ,', ',')
+
+                    mention.reply(yeet[:-2])
+                    print(yeet[:-2])
+
+                else:
+                    pass
+
+        except Exception as e:
+            print(e)
+            try:
+                mention.reply("There was error thrown during the translation. Summoning /u/zsvx")
+            except Exception as e:
+                pass
+            
+
+        finally:
             comments_replied.append(mention.id)
             with open("comments_replied.txt", "w") as f:
                 for comment_id in comments_replied:
                     f.write(comment_id + "\n")
+            if ispost == True:
+                posts_replied.append(mention.id)
+                with open("posts_replied.txt", "w") as f:
+                    for post_id in posts_replied:
+                        f.write(post_id + "\n")
